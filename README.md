@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Towards Intelligent Dermatology: Deep Learning-Based Detection and Classification of 22 Skin Conditions
 
 ---
