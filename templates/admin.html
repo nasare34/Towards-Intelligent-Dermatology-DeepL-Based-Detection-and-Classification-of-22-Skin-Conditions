@@ -1,0 +1,276 @@
+{% extends 'base.html' %}
+{% block title %}Admin Panel{% endblock %}
+{% block topbar_title %}Admin Panel{% endblock %}
+{% block extra_head %}
+<style>
+.tab-bar{display:flex;gap:4px;background:var(--bg3);padding:4px;border-radius:10px;margin-bottom:20px;width:fit-content;}
+.tab-btn{padding:8px 18px;border-radius:8px;font-size:0.85rem;font-weight:600;border:none;cursor:pointer;font-family:var(--font);color:var(--text2);background:transparent;transition:all .2s;white-space:nowrap;}
+.tab-btn.active{background:var(--bg2);color:var(--text);box-shadow:0 2px 8px rgba(0,0,0,0.3);}
+.tab-pane{display:none;}.tab-pane.active{display:block;}
+.status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px;}
+</style>
+{% endblock %}
+{% block content %}
+<div class="page-header"><h1>⚙️ Admin Panel</h1><p>Manage users, approvals and deleted records</p></div>
+<div class="stats-grid" style="margin-bottom:20px">
+  <div class="stat-card"><div class="stat-icon" style="background:rgba(79,142,247,0.1);color:var(--accent)"><i class="fas fa-users"></i></div><div class="stat-value">{{ total_users }}</div><div class="stat-label">Health Workers</div></div>
+  <div class="stat-card"><div class="stat-icon" style="background:rgba(245,158,11,0.1);color:var(--amber)"><i class="fas fa-user-clock"></i></div><div class="stat-value">{{ pending|length }}</div><div class="stat-label">Pending Approvals</div></div>
+  <div class="stat-card"><div class="stat-icon" style="background:rgba(16,185,129,0.1);color:var(--green)"><i class="fas fa-microscope"></i></div><div class="stat-value">{{ total_preds }}</div><div class="stat-label">Active Records</div></div>
+  <div class="stat-card"><div class="stat-icon" style="background:rgba(239,68,68,0.1);color:var(--red)"><i class="fas fa-trash-alt"></i></div><div class="stat-value">{{ deleted_recs|length }}</div><div class="stat-label">Deleted Records</div></div>
+  <div class="stat-card"><div class="stat-icon" style="background:rgba(6,182,212,0.1);color:var(--teal)"><i class="fas fa-share-alt"></i></div><div class="stat-value">{{ referral_requests|length }}</div><div class="stat-label">Pending Referrals</div></div>
+</div>
+
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="showTab('pending')"><i class="fas fa-user-clock"></i> Pending ({{ pending|length }})</button>
+  <button class="tab-btn" onclick="showTab('users')"><i class="fas fa-users"></i> All Users</button>
+  <button class="tab-btn" onclick="showTab('add')"><i class="fas fa-user-plus"></i> Add User</button>
+  <button class="tab-btn" onclick="showTab('deleted')"><i class="fas fa-trash-restore"></i> Deleted Records ({{ deleted_recs|length }})</button>
+  <button class="tab-btn" onclick="showTab('referrals')" id="ref-tab-btn">
+    <i class="fas fa-share-alt"></i> Referrals
+    {% if referral_requests|length > 0 %}<span style="background:var(--red);color:white;border-radius:10px;padding:1px 7px;font-size:0.65rem;margin-left:4px">{{ referral_requests|length }}</span>{% endif %}
+  </button>
+</div>
+
+<!-- PENDING APPROVALS -->
+<div class="tab-pane active" id="tab-pending">
+  <div class="card">
+    <div class="card-title"><i class="fas fa-user-clock"></i> Pending Registration Requests</div>
+    {% if pending %}
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Name</th><th>Username</th><th>Staff ID</th><th>Email</th><th>Department</th><th>Submitted</th><th>Actions</th></tr></thead>
+        <tbody>
+        {% for u in pending %}
+        <tr>
+          <td>{{ u.full_name }}</td>
+          <td style="font-family:var(--font-mono);font-size:0.82rem">{{ u.username }}</td>
+          <td>{{ u.staff_id or '—' }}</td>
+          <td style="font-size:0.82rem;color:var(--text2)">{{ u.email or '—' }}</td>
+          <td style="font-size:0.82rem;color:var(--text2)">{{ u.department or '—' }}</td>
+          <td style="font-size:0.78rem;color:var(--text3)">{{ u.created_at[:10] }}</td>
+          <td>
+            <div style="display:flex;gap:6px">
+              <form method="POST" action="{{ url_for('approve_user', uid=u.id) }}" style="display:inline">
+                <button type="submit" class="btn btn-sm" style="background:rgba(16,185,129,0.1);color:var(--green);border:1px solid rgba(16,185,129,0.2)"><i class="fas fa-check"></i> Approve</button>
+              </form>
+              <form method="POST" action="{{ url_for('reject_user', uid=u.id) }}" style="display:inline" onsubmit="return confirm('Reject this registration?')">
+                <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-times"></i> Reject</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div style="text-align:center;padding:40px;color:var(--text3)"><i class="fas fa-check-circle" style="font-size:2rem;margin-bottom:12px;display:block;color:var(--green);opacity:0.5"></i>No pending approvals</div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ALL USERS -->
+<div class="tab-pane" id="tab-users">
+  <div class="card">
+    <div class="card-title"><i class="fas fa-list"></i> All Users</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Name</th><th>Username</th><th>Staff ID</th><th>Role</th><th>Status</th><th>Last Login</th><th>Actions</th></tr></thead>
+        <tbody>
+        {% for u in users %}
+        <tr>
+          <td><div>{{ u.full_name }}</div><div style="font-size:0.75rem;color:var(--text3)">{{ u.email or '' }}</div></td>
+          <td style="font-family:var(--font-mono);font-size:0.82rem;color:var(--text2)">{{ u.username }}</td>
+          <td style="font-size:0.82rem;color:var(--text2)">{{ u.staff_id or '—' }}</td>
+          <td><span class="badge {% if u.role=='admin' %}badge-high{% else %}badge-none{% endif %}">{{ u.role }}</span></td>
+          <td>
+            <span class="badge {% if u.status=='active' %}badge-low{% elif u.status=='pending' %}badge-medium{% else %}badge-high{% endif %}">
+              <span class="status-dot" style="background:{% if u.status=='active' %}var(--green){% elif u.status=='pending' %}var(--amber){% else %}var(--red){% endif %}"></span>
+              {{ u.status }}
+            </span>
+          </td>
+          <td style="font-size:0.78rem;color:var(--text3)">{{ (u.last_login or 'Never')[:10] }}</td>
+          <td>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              {% if u.id != session.user_id %}
+                {% if u.status == 'active' %}
+                <form method="POST" action="{{ url_for('suspend_user', uid=u.id) }}" style="display:inline" onsubmit="return confirm('Suspend this user?')">
+                  <button type="submit" class="btn btn-sm" style="background:rgba(245,158,11,0.1);color:var(--amber);border:1px solid rgba(245,158,11,0.2)"><i class="fas fa-ban"></i></button>
+                </form>
+                {% elif u.status == 'suspended' %}
+                <form method="POST" action="{{ url_for('activate_user', uid=u.id) }}" style="display:inline">
+                  <button type="submit" class="btn btn-sm" style="background:rgba(16,185,129,0.1);color:var(--green);border:1px solid rgba(16,185,129,0.2)"><i class="fas fa-check"></i></button>
+                </form>
+                {% endif %}
+                <form method="POST" action="{{ url_for('delete_user', uid=u.id) }}" style="display:inline" onsubmit="return confirm('Permanently delete user?')">
+                  <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
+                </form>
+              {% else %}
+              <span style="font-size:0.75rem;color:var(--text3)">You</span>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ADD USER -->
+<div class="tab-pane" id="tab-add">
+  <div class="card" style="max-width:520px">
+    <div class="card-title"><i class="fas fa-user-plus"></i> Add New User Directly</div>
+    <form method="POST" action="{{ url_for('add_user') }}">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div class="form-group"><label class="form-label">Full Name</label><input type="text" name="full_name" class="form-input" placeholder="Dr. Full Name" required/></div>
+        <div class="form-group"><label class="form-label">Staff ID</label><input type="text" name="staff_id" class="form-input" placeholder="e.g. GCTU-001"/></div>
+        <div class="form-group"><label class="form-label">Username</label><input type="text" name="username" class="form-input" placeholder="username" required/></div>
+        <div class="form-group"><label class="form-label">Password</label><input type="password" name="password" class="form-input" placeholder="Strong password" required/></div>
+      </div>
+      <div class="form-group"><label class="form-label">Role</label>
+        <select name="role" class="form-select"><option value="user">Health Worker</option><option value="admin">Administrator</option></select></div>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center"><i class="fas fa-plus"></i> Create Account</button>
+    </form>
+  </div>
+</div>
+
+<!-- REFERRALS -->
+<div class="tab-pane" id="tab-referrals">
+  {% if referral_requests %}
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-title" style="color:var(--teal)"><i class="fas fa-clock"></i> Pending Access Requests</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Requested By</th><th>Patient Record</th><th>Record Owner</th><th>Reason</th><th>Submitted</th><th>Actions</th></tr></thead>
+        <tbody>
+        {% for r in referral_requests %}
+        <tr>
+          <td>
+            <div style="font-weight:600">{{ r.requester_name }}</div>
+            <div style="font-size:0.75rem;color:var(--text3)">{{ r.requester_staff_id or '' }}</div>
+          </td>
+          <td>
+            <div style="font-size:0.87rem">{{ r.patient_name or 'Anonymous' }}</div>
+            <div style="font-size:0.75rem;color:var(--text2)">{{ r.predicted_class }}</div>
+          </td>
+          <td style="font-size:0.85rem">{{ r.owner_name }}</td>
+          <td style="font-size:0.82rem;color:var(--text2);max-width:220px">{{ r.reason or '—' }}</td>
+          <td style="font-size:0.78rem;color:var(--text3)">{{ r.created_at[:10] }}</td>
+          <td>
+            <div style="display:flex;gap:6px">
+              <form method="POST" action="{{ url_for('approve_referral', ref_id=r.id) }}" style="display:inline">
+                <button type="submit" class="btn btn-sm" style="background:rgba(16,185,129,0.1);color:var(--green);border:1px solid rgba(16,185,129,0.2)">
+                  <i class="fas fa-check"></i> Approve
+                </button>
+              </form>
+              <form method="POST" action="{{ url_for('deny_referral', ref_id=r.id) }}" style="display:inline">
+                <button type="submit" class="btn btn-danger btn-sm">
+                  <i class="fas fa-times"></i> Deny
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% else %}
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-title"><i class="fas fa-clock"></i> Pending Access Requests</div>
+    <div style="text-align:center;padding:32px;color:var(--text3)">
+      <i class="fas fa-check-circle" style="font-size:2rem;margin-bottom:10px;display:block;color:var(--green);opacity:0.5"></i>
+      No pending referral requests
+    </div>
+  </div>
+  {% endif %}
+
+  {% if all_referrals %}
+  <div class="card">
+    <div class="card-title"><i class="fas fa-history"></i> Recent Referral Decisions</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Requested By</th><th>Patient</th><th>Owner</th><th>Status</th><th>Reviewed By</th><th>Date</th></tr></thead>
+        <tbody>
+        {% for r in all_referrals %}
+        <tr>
+          <td style="font-size:0.87rem">{{ r.requester_name }}</td>
+          <td>
+            <div style="font-size:0.85rem">{{ r.patient_name or 'Anonymous' }}</div>
+            <div style="font-size:0.75rem;color:var(--text2)">{{ r.predicted_class }}</div>
+          </td>
+          <td style="font-size:0.85rem">{{ r.owner_name }}</td>
+          <td>
+            <span class="badge {% if r.status=='approved' %}badge-low{% else %}badge-high{% endif %}">
+              {{ r.status }}
+            </span>
+          </td>
+          <td style="font-size:0.82rem;color:var(--text2)">{{ r.reviewer_name or '—' }}</td>
+          <td style="font-size:0.78rem;color:var(--text3)">{{ (r.reviewed_at or '')[:10] }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- DELETED RECORDS -->
+<div class="tab-pane" id="tab-deleted">
+  <div class="card">
+    <div class="card-title"><i class="fas fa-trash-restore"></i> Deleted Records — Audit Log</div>
+    <div style="font-size:0.8rem;color:var(--text3);margin-bottom:14px"><i class="fas fa-shield-alt" style="color:var(--amber)"></i> These records were deleted by health workers. You can restore them if needed.</div>
+    {% if deleted_recs %}
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Patient</th><th>Condition</th><th>Examined By</th><th>Deleted By</th><th>Deleted At</th><th>Reason</th><th>Actions</th></tr></thead>
+        <tbody>
+        {% for r in deleted_recs %}
+        <tr style="opacity:0.75">
+          <td><div style="font-weight:600">{{ r.patient_name or 'Anonymous' }}</div><div style="font-size:0.75rem;color:var(--text3)">{{ r.created_at[:10] }}</div></td>
+          <td>{{ r.predicted_class }}</td>
+          <td style="font-size:0.83rem">{{ r.examined_by }}</td>
+          <td style="font-size:0.83rem;color:var(--red)">{{ r.deleted_by_name or '—' }}</td>
+          <td style="font-size:0.78rem;color:var(--text3)">{{ (r.deleted_at or '')[:16].replace('T',' ') }}</td>
+          <td style="font-size:0.8rem;color:var(--text2);max-width:180px">{{ r.delete_reason or '—' }}</td>
+          <td>
+            <form method="POST" action="{{ url_for('restore_record', rid=r.id) }}" onsubmit="return confirm('Restore this record?')">
+              <button type="submit" class="btn btn-sm" style="background:rgba(16,185,129,0.1);color:var(--green);border:1px solid rgba(16,185,129,0.2)"><i class="fas fa-undo"></i> Restore</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div style="text-align:center;padding:40px;color:var(--text3)"><i class="fas fa-trash" style="font-size:2rem;margin-bottom:12px;display:block;opacity:0.3"></i>No deleted records</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+function showTab(name) {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  event.target.classList.add('active');
+}
+// Auto-open pending tab if there are approvals
+{% if pending|length > 0 %}
+// Already on pending tab by default
+{% endif %}
+// Auto-switch to referrals tab if URL has #tab-referrals
+if (window.location.hash === '#tab-referrals') {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-referrals').classList.add('active');
+  document.getElementById('ref-tab-btn').classList.add('active');
+}
+</script>
+{% endblock %}

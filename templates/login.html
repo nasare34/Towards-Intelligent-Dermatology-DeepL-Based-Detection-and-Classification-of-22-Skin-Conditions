@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>SkinDx — Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #0b0f1a; --bg2: #111827; --bg3: #1c2537;
+      --border: rgba(255,255,255,0.07); --border2: rgba(255,255,255,0.12);
+      --text: #f0f4ff; --text2: #8b9db8; --text3: #5a6a82;
+      --accent: #4f8ef7; --accent2: #7c3aed; --teal: #06b6d4;
+      --radius: 16px; --font: 'DM Sans',sans-serif; --font-head: 'Space Grotesk',sans-serif;
+    }
+    *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+    /* Left panel */
+    .left-panel {
+      background: linear-gradient(135deg, #0d1b3e 0%, #1a1040 50%, #0d2230 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 60px;
+      position: relative;
+      overflow: hidden;
+    }
+    .left-panel::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 30% 50%, rgba(79,142,247,0.12) 0%, transparent 60%),
+                  radial-gradient(ellipse at 70% 20%, rgba(124,58,237,0.10) 0%, transparent 50%);
+    }
+    .dots-bg {
+      position: absolute; inset: 0;
+      background-image: radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px);
+      background-size: 32px 32px;
+    }
+    .left-content { position: relative; z-index: 1; }
+    .brand {
+      display: flex; align-items: center; gap: 14px;
+      margin-bottom: 56px;
+    }
+    .brand-icon {
+      width: 52px; height: 52px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px;
+    }
+    .brand-name {
+      font-family: var(--font-head);
+      font-size: 1.8rem; font-weight: 700;
+      background: linear-gradient(135deg, var(--accent), var(--teal));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .brand-sub { font-size: 0.8rem; color: var(--text3); }
+    .left-heading {
+      font-family: var(--font-head);
+      font-size: 2.4rem; font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 16px;
+    }
+    .left-heading span {
+      background: linear-gradient(135deg, var(--accent), var(--teal));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .left-desc { color: var(--text2); line-height: 1.7; margin-bottom: 40px; font-size: 0.95rem; }
+    .feature-list { display: flex; flex-direction: column; gap: 14px; }
+    .feature-item {
+      display: flex; align-items: center; gap: 12px;
+      font-size: 0.88rem; color: var(--text2);
+    }
+    .feature-icon {
+      width: 32px; height: 32px;
+      background: rgba(79,142,247,0.1);
+      border: 1px solid rgba(79,142,247,0.2);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--accent); font-size: 0.8rem; flex-shrink: 0;
+    }
+    .stats-row {
+      display: flex; gap: 32px; margin-top: 48px;
+    }
+    .stat-item { }
+    .stat-num {
+      font-family: var(--font-head);
+      font-size: 1.6rem; font-weight: 700; color: var(--accent);
+    }
+    .stat-lbl { font-size: 0.75rem; color: var(--text3); }
+
+    /* Right panel */
+    .right-panel {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      background: var(--bg);
+    }
+    .login-box {
+      width: 100%;
+      max-width: 420px;
+    }
+    .login-title {
+      font-family: var(--font-head);
+      font-size: 1.7rem; font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .login-sub { color: var(--text2); font-size: 0.9rem; margin-bottom: 32px; }
+    .form-group { margin-bottom: 20px; }
+    .form-label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--text2); margin-bottom: 6px; }
+    .input-wrap { position: relative; }
+    .input-icon {
+      position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+      color: var(--text3); font-size: 0.9rem;
+    }
+    .form-input {
+      width: 100%;
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      border-radius: 10px;
+      padding: 12px 14px 12px 40px;
+      color: var(--text);
+      font-family: var(--font); font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .form-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(79,142,247,0.15);
+    }
+    .btn-login {
+      width: 100%;
+      padding: 13px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: white;
+      border: none; border-radius: 10px;
+      font-family: var(--font); font-size: 0.95rem; font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      margin-top: 8px;
+    }
+    .btn-login:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(79,142,247,0.3); }
+    .demo-creds {
+      margin-top: 20px;
+      padding: 14px 16px;
+      background: rgba(79,142,247,0.06);
+      border: 1px solid rgba(79,142,247,0.15);
+      border-radius: 10px;
+      font-size: 0.8rem; color: var(--text2);
+    }
+    .demo-creds strong { color: var(--accent); }
+    .demo-item { margin-bottom: 4px; }
+    .demo-item:last-child { margin-bottom: 0; }
+    .alert {
+      padding: 10px 14px; border-radius: 8px; font-size: 0.85rem;
+      margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+    }
+    .alert-error { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); color: #fca5a5; }
+    .gctu-badge {
+      text-align: center; margin-top: 28px;
+      font-size: 0.72rem; color: var(--text3); line-height: 1.5;
+    }
+    @media (max-width: 768px) {
+      body { grid-template-columns: 1fr; }
+      .left-panel { display: none; }
+      .right-panel { padding: 24px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="left-panel">
+    <div class="dots-bg"></div>
+    <div class="left-content">
+      <div class="brand">
+        <div class="brand-icon">🔬</div>
+        <div>
+          <div class="brand-name">SkinDx</div>
+          <div class="brand-sub">AI Dermatology Platform</div>
+        </div>
+      </div>
+      <h1 class="left-heading">Intelligent <span>Skin Disease</span> Detection</h1>
+      <p class="left-desc">
+        An ensemble deep learning system combining EfficientNetB3, MobileNetV2,
+        and ResNet50 for accurate classification of 22 skin conditions.
+        Built for healthcare workers in resource-constrained settings.
+      </p>
+      <div class="feature-list">
+        <div class="feature-item">
+          <div class="feature-icon"><i class="fas fa-brain"></i></div>
+          Triple-branch CNN ensemble — 22 skin disease classes
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon"><i class="fas fa-file-medical"></i></div>
+          Automated clinical reports with recommendations
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon"><i class="fas fa-chart-line"></i></div>
+          Analytics dashboard for healthcare monitoring
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
+          Secure, role-based access for health workers
+        </div>
+      </div>
+      <div class="stats-row">
+        <div class="stat-item"><div class="stat-num">22</div><div class="stat-lbl">Disease Classes</div></div>
+        <div class="stat-item"><div class="stat-num">3</div><div class="stat-lbl">CNN Models</div></div>
+        <div class="stat-item"><div class="stat-num">15K+</div><div class="stat-lbl">Training Images</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="right-panel">
+    <div class="login-box">
+      <h2 class="login-title">Welcome back</h2>
+      <p class="login-sub">Sign in to your SkinDx account to continue</p>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for cat, msg in messages %}
+          <div class="alert alert-{{ cat }}">
+            <i class="fas fa-exclamation-circle"></i> {{ msg }}
+          </div>
+        {% endfor %}
+      {% endwith %}
+
+      <form method="POST" action="{{ url_for('login') }}">
+        <div class="form-group">
+          <label class="form-label">Username</label>
+          <div class="input-wrap">
+            <i class="fas fa-user input-icon"></i>
+            <input type="text" name="username" class="form-input" placeholder="Enter your username" required autocomplete="username"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <div class="input-wrap">
+            <i class="fas fa-lock input-icon"></i>
+            <input type="password" name="password" class="form-input" placeholder="Enter your password" required autocomplete="current-password"/>
+          </div>
+        </div>
+        <button type="submit" class="btn-login">
+          <i class="fas fa-sign-in-alt"></i> Sign In
+        </button>
+      </form>
+
+      <div class="demo-creds">
+        <div class="demo-item">🔑 <strong>Admin:</strong> admin / admin123</div>
+        <div class="demo-item">👨‍⚕️ <strong>Health Worker:</strong> drkofi / password123</div>
+      </div>
+
+      <div class="login-link" style="text-align:center;margin-top:16px;font-size:0.85rem;color:#8b9db8">New health worker? <a href="/signup" style="color:#4f8ef7;text-decoration:none;font-weight:600">Request Access</a></div>
+      <div class="gctu-badge">
+        Ghana Communication Technology University<br/>
+        Faculty of Computing & Information Systems<br/>
+        MSc Computer Science — 2025/2026
+      </div>
+    </div>
+  </div>
+</body>
+</html>

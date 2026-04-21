@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block title %}My Profile{% endblock %}
+{% block topbar_title %}My Profile{% endblock %}
+{% block content %}
+<div class="page-header"><h1>👤 My Profile</h1><p>Manage your account details and security</p></div>
+<div style="display:grid;grid-template-columns:280px 1fr;gap:20px;align-items:start">
+  <!-- Left: avatar card -->
+  <div>
+    <div class="card" style="text-align:center">
+      <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:700;color:white;margin:0 auto 16px">
+        {{ session.full_name[0] | upper }}
+      </div>
+      <div style="font-family:var(--font-head);font-size:1.1rem;font-weight:600">{{ user.full_name }}</div>
+      <div style="color:var(--text3);font-size:0.82rem;margin-top:4px">@{{ user.username }}</div>
+      {% if user.staff_id %}<div style="font-size:0.78rem;color:var(--text2);margin-top:4px"><i class="fas fa-id-badge" style="color:var(--accent)"></i> {{ user.staff_id }}</div>{% endif %}
+      {% if user.department %}<div style="font-size:0.78rem;color:var(--text2);margin-top:3px"><i class="fas fa-hospital" style="color:var(--teal)"></i> {{ user.department }}</div>{% endif %}
+      {% if user.email %}<div style="font-size:0.78rem;color:var(--text2);margin-top:3px"><i class="fas fa-envelope" style="color:var(--accent2)"></i> {{ user.email }}</div>{% endif %}
+      <div style="display:flex;gap:8px;justify-content:center;margin-top:12px">
+        <span class="badge {% if user.role=='admin' %}badge-high{% else %}badge-none{% endif %}">{{ user.role | capitalize }}</span>
+        <span class="badge badge-low">{{ user.status }}</span>
+      </div>
+      <div style="margin-top:20px;padding:14px;background:var(--bg3);border-radius:var(--radius-sm)">
+        <div style="font-size:1.8rem;font-weight:700;color:var(--accent);font-family:var(--font-head)">{{ my_preds }}</div>
+        <div style="font-size:0.8rem;color:var(--text3)">Total Analyses</div>
+      </div>
+      <div style="margin-top:10px;padding:10px;background:var(--bg3);border-radius:var(--radius-sm)">
+        <div style="font-size:0.75rem;color:var(--text3)">Member since</div>
+        <div style="font-size:0.85rem;font-weight:600">{{ user.created_at[:10] }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: forms -->
+  <div style="display:flex;flex-direction:column;gap:16px">
+    <form method="POST">
+      <!-- Profile info -->
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-title"><i class="fas fa-user-edit"></i> Profile Information</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div class="form-group"><label class="form-label">Full Name</label>
+            <input type="text" name="full_name" class="form-input" value="{{ user.full_name }}"/></div>
+          <div class="form-group"><label class="form-label">Staff / Employee ID</label>
+            <input type="text" name="staff_id" class="form-input" value="{{ user.staff_id or '' }}" placeholder="e.g. GCTU-HW-001"/></div>
+          <div class="form-group"><label class="form-label">Email Address</label>
+            <input type="email" name="email" class="form-input" value="{{ user.email or '' }}" placeholder="you@hospital.gh"/></div>
+          <div class="form-group"><label class="form-label">Department</label>
+            <input type="text" name="department" class="form-input" value="{{ user.department or '' }}" placeholder="e.g. Dermatology"/></div>
+        </div>
+        <button type="submit" name="action" value="profile" class="btn btn-primary"><i class="fas fa-save"></i> Save Profile</button>
+      </div>
+
+      <!-- Password change -->
+      <div class="card">
+        <div class="card-title"><i class="fas fa-lock"></i> Change Password</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">
+          <div class="form-group"><label class="form-label">Current Password</label>
+            <input type="password" name="current_password" class="form-input" placeholder="Current password"/></div>
+          <div class="form-group"><label class="form-label">New Password</label>
+            <input type="password" name="new_password" class="form-input" placeholder="Min. 6 characters"/></div>
+          <div class="form-group"><label class="form-label">Confirm New Password</label>
+            <input type="password" name="confirm_password" class="form-input" placeholder="Repeat new password"/></div>
+        </div>
+        <div style="font-size:0.8rem;color:var(--text3);margin-bottom:12px"><i class="fas fa-info-circle"></i> Leave password fields blank if you don't want to change your password.</div>
+        <button type="submit" name="action" value="password" class="btn btn-ghost"><i class="fas fa-key"></i> Change Password</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

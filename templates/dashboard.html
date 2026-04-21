@@ -1,0 +1,217 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block topbar_title %}Dashboard{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.grid-3 { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+.recent-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 0; border-bottom: 1px solid var(--border);
+}
+.recent-item:last-child { border-bottom: none; }
+.thumb {
+  width: 44px; height: 44px; border-radius: 8px;
+  object-fit: cover; flex-shrink: 0;
+  background: var(--bg3);
+}
+.thumb-placeholder {
+  width: 44px; height: 44px; border-radius: 8px;
+  background: var(--bg3); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text3); font-size: 1.1rem;
+}
+.recent-info { flex: 1; min-width: 0; }
+.recent-name { font-size: 0.87rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.recent-meta { font-size: 0.75rem; color: var(--text3); margin-top: 2px; }
+.chart-container { position: relative; height: 220px; }
+@media (max-width: 900px) {
+  .grid-2, .grid-3 { grid-template-columns: 1fr; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>👋 Good day, {{ session.full_name.split()[0] }}</h1>
+  <p>Here's an overview of your skin disease screening platform</p>
+</div>
+
+<!-- Stat Cards -->
+<div class="stats-grid">
+  <div class="stat-card" style="--accent-grad: linear-gradient(90deg,#4f8ef7,#06b6d4)">
+    <div class="stat-icon" style="background:rgba(79,142,247,0.1); color:var(--accent)">
+      <i class="fas fa-microscope"></i>
+    </div>
+    <div class="stat-value">{{ total_predictions }}</div>
+    <div class="stat-label">Total Analyses</div>
+  </div>
+  <div class="stat-card" style="--accent-grad: linear-gradient(90deg,#10b981,#06b6d4)">
+    <div class="stat-icon" style="background:rgba(16,185,129,0.1); color:var(--green)">
+      <i class="fas fa-calendar-day"></i>
+    </div>
+    <div class="stat-value">{{ today_predictions }}</div>
+    <div class="stat-label">Today's Analyses</div>
+  </div>
+  <div class="stat-card" style="--accent-grad: linear-gradient(90deg,#7c3aed,#ec4899)">
+    <div class="stat-icon" style="background:rgba(124,58,237,0.1); color:var(--accent2)">
+      <i class="fas fa-users"></i>
+    </div>
+    <div class="stat-value">{{ total_users }}</div>
+    <div class="stat-label">Health Workers</div>
+  </div>
+  <div class="stat-card" style="--accent-grad: linear-gradient(90deg,#f59e0b,#ef4444)">
+    <div class="stat-icon" style="background:rgba(245,158,11,0.1); color:var(--amber)">
+      <i class="fas fa-exclamation-triangle"></i>
+    </div>
+    <div class="stat-value">
+      {% set critical = urgency_counts | selectattr('urgency_level','equalto','critical') | list %}
+      {% set high = urgency_counts | selectattr('urgency_level','equalto','high') | list %}
+      {{ (critical[0].cnt if critical else 0) + (high[0].cnt if high else 0) }}
+    </div>
+    <div class="stat-label">High/Critical Urgency</div>
+  </div>
+  {% if is_admin and pending_users > 0 %}
+  <div class="stat-card" style="--accent-grad: linear-gradient(90deg,#f59e0b,#d97706)">
+    <div class="stat-icon" style="background:rgba(245,158,11,0.1); color:var(--amber)">
+      <i class="fas fa-user-clock"></i>
+    </div>
+    <div class="stat-value">{{ pending_users }}</div>
+    <div class="stat-label">Pending Approvals <a href="/admin" style="font-size:0.7rem;color:var(--accent);margin-left:4px">Review →</a></div>
+  </div>
+  {% endif %}
+  {% if not is_admin and (my_approved_referrals > 0 or my_pending_referrals > 0) %}
+  <div class="stat-card" style="--accent-grad: linear-gradient(90deg,#06b6d4,#4f8ef7)">
+    <div class="stat-icon" style="background:rgba(6,182,212,0.1); color:var(--teal)">
+      <i class="fas fa-share-alt"></i>
+    </div>
+    <div class="stat-value">{{ my_approved_referrals }}</div>
+    <div class="stat-label">
+      Approved Referrals
+      {% if my_pending_referrals > 0 %}
+      <span style="font-size:0.72rem;color:var(--amber);display:block;margin-top:2px">{{ my_pending_referrals }} pending review</span>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Charts row -->
+<div class="grid-3" style="margin-bottom:20px">
+  <div class="card">
+    <div class="card-title"><i class="fas fa-chart-line"></i> Weekly Activity (Last 7 Days)</div>
+    <div class="chart-container">
+      <canvas id="weeklyChart"></canvas>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title"><i class="fas fa-chart-pie"></i> Urgency Distribution</div>
+    <div class="chart-container">
+      <canvas id="urgencyChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <!-- Recent analyses -->
+  <div class="card">
+    <div class="card-title" style="justify-content:space-between">
+      <span><i class="fas fa-history"></i> Recent Analyses</span>
+      <a href="{{ url_for('history') }}" style="font-size:0.78rem;color:var(--accent);text-decoration:none">View all →</a>
+    </div>
+    {% for r in recent %}
+    <div class="recent-item">
+      {% if r.image_path %}
+      <img src="{{ url_for('static', filename='uploads/' + r.image_path) }}" class="thumb" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+      <div class="thumb-placeholder" style="display:none"><i class="fas fa-image"></i></div>
+      {% else %}
+      <div class="thumb-placeholder"><i class="fas fa-image"></i></div>
+      {% endif %}
+      <div class="recent-info">
+        <div class="recent-name">{{ r.patient_name or 'Anonymous' }}</div>
+        <div class="recent-meta">{{ r.predicted_class }} · {{ r.created_at[:10] }}</div>
+      </div>
+      <span class="badge badge-{{ r.urgency_level }}">{{ r.urgency_level }}</span>
+    </div>
+    {% else %}
+    <p style="color:var(--text3); font-size:0.87rem; text-align:center; padding:20px 0">No analyses yet. <a href="{{ url_for('predict') }}" style="color:var(--accent)">Start one →</a></p>
+    {% endfor %}
+  </div>
+
+  <!-- Top conditions -->
+  <div class="card">
+    <div class="card-title"><i class="fas fa-list-ol"></i> Top Detected Conditions</div>
+    {% for r in class_dist %}
+    <div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;font-size:0.82rem;margin-bottom:4px">
+        <span style="color:var(--text)">{{ r.predicted_class }}</span>
+        <span style="color:var(--text2)">{{ r.cnt }}</span>
+      </div>
+      <div class="conf-bar-wrap">
+        <div class="conf-bar" style="width:{{ [(r.cnt / (class_dist[0].cnt or 1) * 100)|int, 100]|min }}%;background:linear-gradient(90deg,var(--accent),var(--teal))"></div>
+      </div>
+    </div>
+    {% else %}
+    <p style="color:var(--text3);font-size:0.87rem;text-align:center;padding:20px 0">No data yet.</p>
+    {% endfor %}
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const chartDefaults = {
+  color: '#8b9db8',
+  plugins: { legend: { labels: { color: '#8b9db8', font: { size: 11 } } } },
+  scales: {
+    x: { ticks: { color: '#5a6a82' }, grid: { color: 'rgba(255,255,255,0.04)' } },
+    y: { ticks: { color: '#5a6a82' }, grid: { color: 'rgba(255,255,255,0.04)' } }
+  }
+};
+
+// Weekly chart
+const weeklyData = {{ weekly | tojson }};
+new Chart(document.getElementById('weeklyChart'), {
+  type: 'bar',
+  data: {
+    labels: weeklyData.map(d => d.day || d[0]),
+    datasets: [{
+      label: 'Analyses',
+      data: weeklyData.map(d => d.cnt || d[1]),
+      backgroundColor: 'rgba(79,142,247,0.6)',
+      borderColor: '#4f8ef7',
+      borderWidth: 1,
+      borderRadius: 6,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: chartDefaults.scales
+  }
+});
+
+// Urgency pie
+const urgencyData = {{ urgency_counts | tojson }};
+const urgencyColors = { critical:'#ef4444', high:'#f87171', medium:'#f59e0b', low:'#10b981', none:'#06b6d4' };
+new Chart(document.getElementById('urgencyChart'), {
+  type: 'doughnut',
+  data: {
+    labels: urgencyData.map(d => (d.urgency_level||d[0]||'').charAt(0).toUpperCase() + (d.urgency_level||d[0]||'').slice(1)),
+    datasets: [{
+      data: urgencyData.map(d => d.cnt || d[1]),
+      backgroundColor: urgencyData.map(d => urgencyColors[d.urgency_level||d[0]] || '#8b9db8'),
+      borderWidth: 0,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    cutout: '65%',
+    plugins: { legend: { labels: { color: '#8b9db8', font: { size: 10 }, boxWidth: 12 } } }
+  }
+});
+</script>
+{% endblock %}

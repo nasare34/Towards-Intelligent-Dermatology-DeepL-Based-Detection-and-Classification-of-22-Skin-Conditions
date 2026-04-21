@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+{% block title %}Analysis Result{% endblock %}
+{% block topbar_title %}Analysis Result{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+.result-hero {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px;
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+}
+.result-hero::before {
+  content: '';
+  position: absolute; top:0; left:0; right:0; height: 3px;
+  background: {% if rec.urgency == 'critical' %}linear-gradient(90deg,#ef4444,#c62828)
+              {% elif rec.urgency == 'high' %}linear-gradient(90deg,#f87171,#ef4444)
+              {% elif rec.urgency == 'medium' %}linear-gradient(90deg,#f59e0b,#d97706)
+              {% elif rec.urgency == 'none' %}linear-gradient(90deg,#06b6d4,#0284c7)
+              {% else %}linear-gradient(90deg,#10b981,#059669){% endif %};
+}
+.result-layout { display: grid; grid-template-columns: auto 1fr; gap: 24px; align-items: start; }
+.result-image {
+  width: 180px; height: 180px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  border: 2px solid var(--border2);
+}
+.result-main {}
+.result-condition {
+  font-family: var(--font-head);
+  font-size: 1.8rem; font-weight: 700;
+  margin-bottom: 6px;
+}
+.result-desc { color: var(--text2); font-size: 0.9rem; line-height: 1.6; margin-bottom: 16px; }
+.result-meta { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+.meta-chip {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 12px;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 20px;
+  font-size: 0.8rem; color: var(--text2);
+}
+.meta-chip strong { color: var(--text); }
+.conf-display {
+  display: flex; align-items: center; gap: 12px; margin-top: 4px;
+}
+.conf-num {
+  font-family: var(--font-head);
+  font-size: 2.2rem; font-weight: 700;
+  color: var(--accent);
+}
+.conf-track {
+  flex: 1; height: 8px;
+  background: var(--bg3);
+  border-radius: 4px; overflow: hidden;
+}
+.conf-fill {
+  height: 100%; border-radius: 4px;
+  background: linear-gradient(90deg, var(--accent), var(--teal));
+  transition: width 1s ease;
+}
+.result-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+.top5-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border);
+}
+.top5-row:last-child { border-bottom: none; }
+.top5-rank {
+  width: 24px; height: 24px;
+  background: var(--bg3);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.72rem; font-weight: 700; flex-shrink: 0;
+  color: var(--text3);
+}
+.top5-rank.first { background: rgba(79,142,247,0.2); color: var(--accent); }
+.top5-name { flex: 1; font-size: 0.85rem; }
+.top5-bar-wrap { width: 80px; height: 6px; background: var(--bg3); border-radius: 3px; }
+.top5-bar { height: 100%; border-radius: 3px; background: var(--accent); }
+.top5-pct { width: 42px; text-align: right; font-size: 0.82rem; color: var(--text2); font-family: var(--font-mono); }
+.rec-list { list-style: none; }
+.rec-list li {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.875rem; color: var(--text2);
+  display: flex; align-items: flex-start; gap: 10px;
+  line-height: 1.5;
+}
+.rec-list li:last-child { border-bottom: none; }
+.rec-list li::before {
+  content: '→';
+  color: var(--accent); font-weight: 700; flex-shrink: 0; margin-top: 1px;
+}
+@media (max-width: 768px) {
+  .result-layout { grid-template-columns: 1fr; }
+  .result-image { width: 100%; height: 200px; }
+  .result-cards { grid-template-columns: 1fr; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start">
+  <div>
+    <h1>📋 Analysis Complete</h1>
+    <p>AI classification result for {{ patient_name or 'Anonymous Patient' }}</p>
+  </div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap">
+    <a href="{{ url_for('download_report', rid=rid) }}" class="btn btn-primary btn-sm">
+      <i class="fas fa-file-pdf"></i> Download PDF Report
+    </a>
+    <a href="{{ url_for('predict') }}" class="btn btn-ghost btn-sm">
+      <i class="fas fa-plus"></i> New Analysis
+    </a>
+  </div>
+</div>
+
+<!-- Main result card -->
+<div class="result-hero">
+  <div class="result-layout">
+    {% if image_path %}
+    <img src="{{ url_for('static', filename='uploads/' + image_path) }}" class="result-image" alt="Skin image"/>
+    {% endif %}
+    <div class="result-main">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+        <span class="badge badge-{{ rec.urgency or 'low' }}" style="font-size:0.78rem;padding:4px 12px">
+          <i class="fas fa-{% if rec.urgency=='critical' or rec.urgency=='high' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+          {{ (rec.urgency or 'low') | upper }} URGENCY
+        </span>
+        <span style="font-size:0.78rem;color:var(--text3)">{{ rec.severity }}</span>
+      </div>
+      <div class="result-condition">{{ pred_class }}</div>
+      <p class="result-desc">{{ rec.description }}</p>
+      <div class="result-meta">
+        {% if patient_name %}<div class="meta-chip"><i class="fas fa-user"></i> <strong>{{ patient_name }}</strong></div>{% endif %}
+        {% if patient_age %}<div class="meta-chip"><i class="fas fa-birthday-cake"></i> {{ patient_age }}</div>{% endif %}
+        {% if patient_sex %}<div class="meta-chip"><i class="fas fa-venus-mars"></i> {{ patient_sex }}</div>{% endif %}
+        <div class="meta-chip"><i class="fas fa-user-md"></i> Refer to: <strong>{{ rec.specialist }}</strong></div>
+      </div>
+      <div style="font-size:0.8rem;color:var(--text3);margin-bottom:6px">Classification Confidence</div>
+      <div class="conf-display">
+        <div class="conf-num">{{ "%.1f"|format(confidence * 100) }}%</div>
+        <div class="conf-track">
+          <div class="conf-fill" id="conf-fill" style="width:0%"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="result-cards">
+  <!-- Top 5 -->
+  <div class="card">
+    <div class="card-title"><i class="fas fa-list-ol"></i> Top-5 Differential Predictions</div>
+    {% for item in top5 %}
+    <div class="top5-row">
+      <div class="top5-rank {% if loop.first %}first{% endif %}">{{ loop.index }}</div>
+      <div class="top5-name">{{ item.class }}</div>
+      <div class="top5-bar-wrap"><div class="top5-bar" style="width:{{ item.probability }}%"></div></div>
+      <div class="top5-pct">{{ "%.1f"|format(item.probability) }}%</div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Recommendations -->
+  <div class="card">
+    <div class="card-title"><i class="fas fa-stethoscope"></i> Clinical Recommendations</div>
+    <ul class="rec-list">
+      {% for r in rec.recommendations %}
+      <li>{{ r }}</li>
+      {% endfor %}
+    </ul>
+    <div style="margin-top:14px;padding:10px 14px;background:rgba(79,142,247,0.06);border-radius:var(--radius-sm);border:1px solid rgba(79,142,247,0.15)">
+      <div style="font-size:0.78rem;color:var(--text3);margin-bottom:2px">Recommended Specialist</div>
+      <div style="font-size:0.9rem;font-weight:600;color:var(--accent)">{{ rec.specialist }}</div>
+    </div>
+  </div>
+</div>
+
+{% if notes %}
+<div class="card" style="margin-top:16px">
+  <div class="card-title"><i class="fas fa-notes-medical"></i> Clinician Notes</div>
+  <p style="color:var(--text2);font-size:0.9rem;line-height:1.7">{{ notes }}</p>
+</div>
+{% endif %}
+
+<!-- Disclaimer -->
+<div style="margin-top:16px;padding:14px 18px;background:rgba(245,158,11,0.05);border:1px solid rgba(245,158,11,0.15);border-radius:var(--radius-sm)">
+  <div style="font-size:0.8rem;color:#fcd34d;font-weight:600;margin-bottom:4px"><i class="fas fa-exclamation-triangle"></i> Medical Disclaimer</div>
+  <p style="font-size:0.8rem;color:var(--text2);line-height:1.6">
+    This AI-generated classification is intended as a screening aid only and does not constitute a definitive medical diagnosis.
+    All results must be reviewed and confirmed by a qualified healthcare professional before any clinical decision is made.
+  </p>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+setTimeout(() => {
+  document.getElementById('conf-fill').style.width = '{{ "%.1f"|format(confidence * 100) }}%';
+}, 300);
+</script>
+{% endblock %}

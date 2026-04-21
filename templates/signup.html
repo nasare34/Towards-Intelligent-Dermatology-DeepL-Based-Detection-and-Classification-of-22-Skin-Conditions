@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>SkinDx — Register</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+  <style>
+    :root{--bg:#0b0f1a;--bg2:#111827;--bg3:#1c2537;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);--text:#f0f4ff;--text2:#8b9db8;--text3:#5a6a82;--accent:#4f8ef7;--accent2:#7c3aed;--teal:#06b6d4;--radius:16px;--font:'DM Sans',sans-serif;--font-head:'Space Grotesk',sans-serif;}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;display:grid;grid-template-columns:1fr 1fr;}
+    .left-panel{background:linear-gradient(135deg,#0d1b3e 0%,#1a1040 50%,#0d2230 100%);display:flex;flex-direction:column;justify-content:center;padding:60px;position:relative;overflow:hidden;}
+    .left-panel::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,rgba(79,142,247,0.12) 0%,transparent 60%),radial-gradient(ellipse at 70% 20%,rgba(124,58,237,0.10) 0%,transparent 50%);}
+    .dots-bg{position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,0.04) 1px,transparent 1px);background-size:32px 32px;}
+    .left-content{position:relative;z-index:1;}
+    .brand{display:flex;align-items:center;gap:14px;margin-bottom:48px;}
+    .brand-icon{width:52px;height:52px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;}
+    .brand-name{font-family:var(--font-head);font-size:1.8rem;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--teal));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+    .left-heading{font-family:var(--font-head);font-size:2rem;font-weight:700;line-height:1.2;margin-bottom:14px;}
+    .left-heading span{background:linear-gradient(135deg,var(--accent),var(--teal));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+    .left-desc{color:var(--text2);line-height:1.7;font-size:0.92rem;margin-bottom:28px;}
+    .step-list{display:flex;flex-direction:column;gap:14px;}
+    .step-item{display:flex;align-items:flex-start;gap:12px;font-size:0.87rem;color:var(--text2);}
+    .step-num{width:26px;height:26px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;color:white;flex-shrink:0;margin-top:1px;}
+    .right-panel{display:flex;align-items:center;justify-content:center;padding:40px;background:var(--bg);overflow-y:auto;}
+    .signup-box{width:100%;max-width:440px;}
+    .page-title{font-family:var(--font-head);font-size:1.6rem;font-weight:700;margin-bottom:4px;}
+    .page-sub{color:var(--text2);font-size:0.88rem;margin-bottom:28px;}
+    .form-group{margin-bottom:16px;}
+    .form-label{display:block;font-size:0.8rem;font-weight:600;color:var(--text2);margin-bottom:5px;}
+    .input-wrap{position:relative;}
+    .input-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:0.85rem;}
+    .form-input{width:100%;background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:10px 12px 10px 36px;color:var(--text);font-family:var(--font);font-size:0.88rem;outline:none;transition:border-color .2s,box-shadow .2s;}
+    .form-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,142,247,0.15);}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+    .section-label{font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text3);margin:18px 0 10px;display:flex;align-items:center;gap:8px;}
+    .section-label::after{content:'';flex:1;height:1px;background:var(--border);}
+    .btn-signup{width:100%;padding:12px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:white;border:none;border-radius:10px;font-family:var(--font);font-size:0.95rem;font-weight:700;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px;}
+    .btn-signup:hover{opacity:0.9;transform:translateY(-1px);box-shadow:0 4px 20px rgba(79,142,247,0.3);}
+    .login-link{text-align:center;margin-top:18px;font-size:0.85rem;color:var(--text2);}
+    .login-link a{color:var(--accent);text-decoration:none;font-weight:600;}
+    .alert{padding:10px 14px;border-radius:8px;font-size:0.85rem;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+    .alert-error{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:#fca5a5;}
+    .alert-success{background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);color:#6ee7b7;}
+    .notice{padding:12px 14px;background:rgba(245,158,11,0.07);border:1px solid rgba(245,158,11,0.18);border-radius:8px;font-size:0.8rem;color:#fcd34d;margin-bottom:18px;display:flex;gap:8px;line-height:1.5;}
+    @media(max-width:768px){body{grid-template-columns:1fr;}.left-panel{display:none;}.right-panel{padding:24px;}}
+  </style>
+</head>
+<body>
+  <div class="left-panel">
+    <div class="dots-bg"></div>
+    <div class="left-content">
+      <div class="brand"><div class="brand-icon">🔬</div><div><div class="brand-name">SkinDx</div></div></div>
+      <h1 class="left-heading">Join the <span>SkinDx</span> Platform</h1>
+      <p class="left-desc">Register as a health worker to access the AI-powered skin disease classification system for your patients.</p>
+      <div class="step-list">
+        <div class="step-item"><div class="step-num">1</div><span>Fill in your details and create your account</span></div>
+        <div class="step-item"><div class="step-num">2</div><span>Your registration is sent to the administrator for review</span></div>
+        <div class="step-item"><div class="step-num">3</div><span>Once approved, you can log in and start classifying skin conditions</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="right-panel">
+    <div class="signup-box">
+      <div class="page-title">Create Account</div>
+      <p class="page-sub">Register as a healthcare worker</p>
+      <div class="notice"><i class="fas fa-info-circle" style="flex-shrink:0;margin-top:1px"></i> Your account will require administrator approval before you can log in.</div>
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for cat, msg in messages %}
+        <div class="alert alert-{{ cat }}"><i class="fas fa-{% if cat=='error' %}exclamation-circle{% else %}check-circle{% endif %}"></i> {{ msg }}</div>
+        {% endfor %}
+      {% endwith %}
+      <form method="POST">
+        <div class="section-label">Personal Information</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Full Name *</label>
+            <div class="input-wrap"><i class="fas fa-user input-icon"></i><input type="text" name="full_name" class="form-input" placeholder="Dr. Full Name" required/></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Staff / Employee ID</label>
+            <div class="input-wrap"><i class="fas fa-id-badge input-icon"></i><input type="text" name="staff_id" class="form-input" placeholder="e.g. GCTU-001"/></div>
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <div class="input-wrap"><i class="fas fa-envelope input-icon"></i><input type="email" name="email" class="form-input" placeholder="you@hospital.gh"/></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Department</label>
+            <div class="input-wrap"><i class="fas fa-hospital input-icon"></i><input type="text" name="department" class="form-input" placeholder="e.g. Dermatology"/></div>
+          </div>
+        </div>
+        <div class="section-label">Account Credentials</div>
+        <div class="form-group">
+          <label class="form-label">Username *</label>
+          <div class="input-wrap"><i class="fas fa-at input-icon"></i><input type="text" name="username" class="form-input" placeholder="Choose a username" required/></div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Password *</label>
+            <div class="input-wrap"><i class="fas fa-lock input-icon"></i><input type="password" name="password" class="form-input" placeholder="Min. 6 characters" required/></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Confirm Password *</label>
+            <div class="input-wrap"><i class="fas fa-lock input-icon"></i><input type="password" name="confirm_password" class="form-input" placeholder="Repeat password" required/></div>
+          </div>
+        </div>
+        <button type="submit" class="btn-signup"><i class="fas fa-user-plus"></i> Submit Registration</button>
+      </form>
+      <div class="login-link">Already have an account? <a href="{{ url_for('login') }}">Sign In</a></div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,11 @@
+*.keras
+*.h5
+*.pt
+models/
+skindx.db*.keras
+*.h5
+*.pt
+models/
+skindx.db
+.idea/
+.DS_Store

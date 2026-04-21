@@ -1,0 +1,77 @@
+{
+  "best_model_name": "EfficientNetB3",
+  "best_model_file": "deployment_model.keras",
+  "class_names_file": "class_names.json",
+  "test_accuracy": 0.682191,
+  "macro_f1": 0.657223,
+  "auc_roc": 0.961259,
+  "map": 0.730385,
+  "model_size_mb": 132.45,
+  "img_size": [
+    224,
+    224
+  ],
+  "num_classes": 22,
+  "class_names": [
+    "Acne",
+    "Actinic_Keratosis",
+    "Benign_tumors",
+    "Bullous",
+    "Candidiasis",
+    "DrugEruption",
+    "Eczema",
+    "Infestations_Bites",
+    "Lichen",
+    "Lupus",
+    "Moles",
+    "Psoriasis",
+    "Rosacea",
+    "Seborrh_Keratoses",
+    "SkinCancer",
+    "Sun_Sunlight_Damage",
+    "Tinea",
+    "Unknown_Normal",
+    "Vascular_Tumors",
+    "Vasculitis",
+    "Vitiligo",
+    "Warts"
+  ],
+  "all_results": {
+    "EfficientNetB3": {
+      "test_accuracy": 0.682191,
+      "macro_f1": 0.657223,
+      "auc_roc": 0.961259,
+      "map": 0.730385,
+      "params": 11583813,
+      "size_mb": 44.19,
+      "inference_mean_ms": 86.08
+    },
+    "MobileNetV2": {
+      "test_accuracy": 0.587322,
+      "macro_f1": 0.562149,
+      "auc_roc": 0.93643,
+      "map": 0.607529,
+      "params": 2927190,
+      "size_mb": 11.17,
+      "inference_mean_ms": 82.44
+    },
+    "ResNet50": {
+      "test_accuracy": 0.66796,
+      "macro_f1": 0.640736,
+      "auc_roc": 0.953869,
+      "map": 0.700933,
+      "params": 24650134,
+      "size_mb": 94.03,
+      "inference_mean_ms": 84.27
+    },
+    "Ensemble (3-Model)": {
+      "test_accuracy": 0.611039,
+      "macro_f1": 0.580287,
+      "auc_roc": 0.944119,
+      "map": 0.623027,
+      "params": 39133445,
+      "size_mb": 149.28,
+      "inference_mean_ms": 100.32
+    }
+  }
+}

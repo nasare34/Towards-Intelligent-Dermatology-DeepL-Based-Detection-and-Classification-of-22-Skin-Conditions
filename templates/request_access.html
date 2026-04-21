@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% block title %}Request Record Access{% endblock %}
+{% block topbar_title %}Request Record Access{% endblock %}
+{% block extra_head %}
+<style>
+.access-card {
+  max-width: 580px;
+  margin: 0 auto;
+}
+.record-preview {
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.record-icon {
+  width: 48px; height: 48px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem; flex-shrink: 0;
+}
+.status-box {
+  padding: 18px 20px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+.status-pending {
+  background: rgba(245,158,11,0.07);
+  border: 1px solid rgba(245,158,11,0.2);
+}
+.status-icon {
+  font-size: 1.6rem;
+  flex-shrink: 0;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>🔐 Request Record Access</h1>
+  <p>Submit a referral request to view this patient record</p>
+</div>
+
+<div class="access-card">
+
+  <!-- Record preview -->
+  <div class="record-preview">
+    <div class="record-icon">🩺</div>
+    <div>
+      <div style="font-weight:600;font-size:0.95rem">{{ pred.patient_name or 'Anonymous Patient' }}</div>
+      <div style="font-size:0.82rem;color:var(--text2);margin-top:2px">
+        Condition: <strong>{{ pred.predicted_class }}</strong>
+        &nbsp;·&nbsp; Recorded: {{ pred.created_at[:10] }}
+      </div>
+      <div style="font-size:0.78rem;color:var(--text3);margin-top:2px">
+        <i class="fas fa-user-md"></i> Examined by: {{ pred.owner_name }}
+      </div>
+    </div>
+    <span class="badge badge-{{ pred.urgency_level }}" style="margin-left:auto;flex-shrink:0">
+      {{ pred.urgency_level }}
+    </span>
+  </div>
+
+  <!-- Already pending -->
+  {% if pending %}
+  <div class="status-box status-pending">
+    <div class="status-icon">⏳</div>
+    <div>
+      <div style="font-weight:600;color:#fcd34d;margin-bottom:4px">Request Pending</div>
+      <div style="font-size:0.87rem;color:var(--text2);line-height:1.6">
+        You already submitted an access request for this record on
+        <strong>{{ pending.created_at[:10] }}</strong>.
+        The administrator will review your request and notify you.
+      </div>
+      <a href="{{ url_for('history') }}" class="btn btn-ghost btn-sm" style="margin-top:12px">
+        <i class="fas fa-arrow-left"></i> Back to Records
+      </a>
+    </div>
+  </div>
+
+  {% else %}
+  <!-- Request form -->
+  <div class="card">
+    <div class="card-title"><i class="fas fa-paper-plane"></i> Submit Access Request</div>
+
+    <div style="background:rgba(79,142,247,0.06);border:1px solid rgba(79,142,247,0.15);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:18px;font-size:0.83rem;color:var(--text2);line-height:1.6">
+      <i class="fas fa-info-circle" style="color:var(--accent)"></i>
+      Your request will be reviewed by the administrator. Once approved, you will be able to
+      view and download this patient record. Please provide a clear clinical reason.
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in messages %}
+      <div class="alert alert-{{ cat }}">
+        <i class="fas fa-{% if cat=='error' %}exclamation-circle{% else %}check-circle{% endif %}"></i>
+        {{ msg }}
+      </div>
+      {% endfor %}
+    {% endwith %}
+
+    <form method="POST">
+      <div class="form-group">
+        <label class="form-label">Reason for Access Request <span style="color:var(--red)">*</span></label>
+        <textarea name="reason" class="form-textarea" rows="4" required
+          placeholder="e.g. I am the referring physician for this patient and need to review the classification results to provide continuity of care..."></textarea>
+        <div style="font-size:0.75rem;color:var(--text3);margin-top:4px">
+          Be specific — this helps the administrator make a faster decision.
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-top:4px">
+        <button type="submit" class="btn btn-gradient" style="flex:1;justify-content:center">
+          <i class="fas fa-paper-plane"></i> Submit Request
+        </button>
+        <a href="{{ url_for('history') }}" class="btn btn-ghost" style="flex:1;justify-content:center">
+          <i class="fas fa-times"></i> Cancel
+        </a>
+      </div>
+    </form>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

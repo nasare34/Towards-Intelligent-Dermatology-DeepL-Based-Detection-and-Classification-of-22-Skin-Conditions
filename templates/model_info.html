@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% block title %}Model Information{% endblock %}
+{% block topbar_title %}Model Information{% endblock %}
+{% block extra_head %}
+<style>
+.arch-flow { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:12px; }
+.arch-box { padding:8px 14px; border-radius:var(--radius-sm); font-size:0.82rem; font-weight:600; border:1px solid; }
+.arch-arrow { color:var(--text3); font-size:1.1rem; }
+.metric-highlight { text-align:center; padding:16px 12px; background:var(--bg3); border-radius:var(--radius-sm); border:1px solid var(--border); }
+.metric-highlight .val { font-family:var(--font-head); font-size:1.5rem; font-weight:700; color:var(--accent); }
+.metric-highlight .lbl { font-size:0.72rem; color:var(--text3); margin-top:3px; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="page-header"><h1>🧠 Model Architecture & Performance</h1><p>Technical specification of the ensemble deep learning system</p></div>
+
+<!-- Header -->
+<div style="background:linear-gradient(135deg,rgba(79,142,247,0.08),rgba(124,58,237,0.08));border:1px solid rgba(79,142,247,0.2);border-radius:var(--radius);padding:24px 28px;margin-bottom:20px;display:flex;align-items:center;gap:20px">
+  <div style="width:60px;height:60px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:1.8rem;flex-shrink:0">🔬</div>
+  <div>
+    <div style="font-family:var(--font-head);font-size:1.2rem;font-weight:700">Triple-Branch CNN Ensemble</div>
+    <div style="color:var(--text2);font-size:0.85rem;margin-top:2px">{{ info.dataset }}</div>
+    <div class="arch-flow">
+      {% for m in info.models %}
+      <div class="arch-box" style="background:rgba(79,142,247,0.1);border-color:rgba(79,142,247,0.25);color:var(--accent)">{{ m }}</div>
+      {% if not loop.last %}<span class="arch-arrow">+</span>{% endif %}
+      {% endfor %}
+      <span class="arch-arrow">→</span>
+      <div class="arch-box" style="background:rgba(124,58,237,0.1);border-color:rgba(124,58,237,0.25);color:#a78bfa">Concatenate (4,864-dim)</div>
+      <span class="arch-arrow">→</span>
+      <div class="arch-box" style="background:rgba(16,185,129,0.1);border-color:rgba(16,185,129,0.25);color:var(--green)">Dense(512) → Softmax({{ info.classes }})</div>
+    </div>
+  </div>
+</div>
+
+{% if info.manifest_loaded and info.best_accuracy %}
+<div style="margin-bottom:20px">
+  <div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text3);margin-bottom:10px">🏆 Best Model: {{ info.best_model }}</div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+    <div class="metric-highlight"><div class="val">{{ info.best_accuracy }}%</div><div class="lbl">Test Accuracy</div></div>
+    <div class="metric-highlight"><div class="val">{{ info.best_f1 }}</div><div class="lbl">Macro F1-Score</div></div>
+    <div class="metric-highlight"><div class="val">{{ info.best_auc }}</div><div class="lbl">AUC-ROC</div></div>
+  </div>
+</div>
+{% endif %}
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
+  <div class="card">
+    <div class="card-title"><i class="fas fa-cog"></i> Configuration</div>
+    {% for label, val in [('Framework', info.framework),('Dataset', info.dataset),('Classes', info.classes),('Input Size', info.img_size ~ ' px'),('Ensemble', info.ensemble),('Best Model', info.best_model)] %}
+    <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);font-size:0.875rem;gap:12px">
+      <span style="color:var(--text2);flex-shrink:0">{{ label }}</span>
+      <span style="font-weight:600;text-align:right">{{ val }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  <div class="card">
+    <div class="card-title"><i class="fas fa-terminal"></i> Setup & Deployment</div>
+    {% for tip, icon, color in [
+      ('Place <code>final_model.keras</code> in the <code>models/</code> folder', 'fas fa-file-code', 'var(--accent)'),
+      ('Place <code>class_names.json</code> in the project root', 'fas fa-tags', 'var(--teal)'),
+      ('Place <code>deployment_manifest.json</code> in the project root', 'fas fa-file-alt', 'var(--green)'),
+      ('Requires TensorFlow ≥ 2.15 for live inference', 'fas fa-bolt', 'var(--amber)'),
+      ('Demo mode activates automatically if no model is found', 'fas fa-play-circle', 'var(--accent2)'),
+      ('<code>pip install reportlab</code> for PDF report export', 'fas fa-file-pdf', 'var(--red)')
+    ] %}
+    <div style="display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border);font-size:0.83rem;color:var(--text2)">
+      <i class="{{ icon }}" style="color:{{ color }};margin-top:2px;flex-shrink:0"></i>
+      <span>{{ tip | safe }}</span>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Per-model results table -->
+<div class="card">
+  <div class="card-title"><i class="fas fa-table"></i> Cross-Model Performance Comparison</div>
+  {% if not info.manifest_loaded %}
+  <div class="alert alert-info" style="margin-bottom:12px"><i class="fas fa-info-circle"></i> Add <code>deployment_manifest.json</code> to the project root to see your real training metrics here.</div>
+  {% endif %}
+  {% if info.model_stats %}
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Model</th><th>Test Accuracy</th><th>Macro F1</th><th>AUC-ROC</th><th>Params (M)</th><th>Size (MB)</th><th>Inference (ms)</th></tr></thead>
+      <tbody>
+        {% for r in info.model_stats %}
+        <tr>
+          <td>
+            <span style="font-weight:600;color:{% if loop.first %}var(--accent){% else %}var(--text){% endif %}">{{ r.name }}</span>
+            {% if loop.first %}<span style="font-size:0.7rem;color:var(--green);margin-left:6px">★ BEST</span>{% endif %}
+          </td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="conf-bar-wrap" style="width:50px"><div class="conf-bar" style="width:{{ r.accuracy }}%;background:{% if r.accuracy>=85 %}var(--green){% elif r.accuracy>=70 %}var(--amber){% else %}var(--red){% endif %}"></div></div>
+              <span style="font-family:var(--font-mono);font-size:0.82rem">{{ r.accuracy }}%</span>
+            </div>
+          </td>
+          <td style="font-family:var(--font-mono);font-size:0.82rem">{{ r.f1 }}</td>
+          <td style="font-family:var(--font-mono);font-size:0.82rem">{{ r.auc }}</td>
+          <td style="color:var(--text2)">{{ r.params_m }}M</td>
+          <td style="color:var(--text2)">{{ r.size_mb }}</td>
+          <td style="color:var(--text2)">{{ r.infer_ms }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div style="text-align:center;padding:32px;color:var(--text3)">
+    <i class="fas fa-file-import" style="font-size:2rem;margin-bottom:12px;display:block;opacity:0.4"></i>
+    <p style="font-size:0.9rem">Add <code>deployment_manifest.json</code> to display your real training results.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
