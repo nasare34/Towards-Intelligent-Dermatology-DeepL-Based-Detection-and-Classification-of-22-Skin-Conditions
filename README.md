@@ -1,6 +1,5 @@
 <<<<<<< HEAD
-# SkinDx — AI Skin Disease Classification Web Application
-### Ghana Communication Technology University | MSc Computer Science 2025/2026
+# Towards Intelligent Dermatology: Deep Learning-Based Detection and Classification of 22 Skin Conditions
 
 ---
 
