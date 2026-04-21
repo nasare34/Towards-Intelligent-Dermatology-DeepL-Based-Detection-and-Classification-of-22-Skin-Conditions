@@ -91,7 +91,4 @@ skindx/
 
 ---
 
-*Developed for MSc thesis defence — GCTU Department of Computer Science*
-=======
-# Towards-Intelligent-Dermatology-DeepL-Based-Detection-and-Classification-of-22-Skin-Conditions
->>>>>>> 86c254420d9394ab0386ecc8b02c2f3d497e9a87
+
